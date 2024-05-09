@@ -8,7 +8,6 @@
 
 namespace one {
 
-    using namespace std::literals;
     using exception_ = std::runtime_error; // your exception type
     
     inline namespace Opt {
@@ -63,7 +62,7 @@ namespace one {
     struct X{
         int i = 0;
         X(const X& x): i(x){}
-        bool operator==(const X& x){return (i==x)? true : false ;}
+        bool operator==(const X& x)const{return (i==x)? true : false ;}
         X& operator=(const X& x) { i = x.i; return *this;}
     };
     */
@@ -85,7 +84,7 @@ namespace one {
                 ptr = new T();
             };
             template <typename... Argss>
-            retain(Argss &&...args) {
+            retain(Argss&&... args) {
                 ptr = new T{args...};
             }
             inline T *get() {
@@ -125,28 +124,41 @@ namespace one {
         template <typename... Argss>
         one(Args... condition, std::chrono::milliseconds t, Argss &&...constructArgs) {
             entrust(t, std::move(condition...));
-            base = new retain(std::forward<Argss...>(constructArgs...));
+            base = new retain(constructArgs...);
         }
         // Constructing objects using constructArgs.
         template <typename... Argss>
-        one(Args... condition, Argss &&...constructArgs) : one(condition..., 5000min , constructArgs...){};
+        one(Args... condition, Argss &&...constructArgs) : one(condition..., std::chrono::milliseconds(5000) , constructArgs...){};
 
         // Constructing objects using condition.
-        one(Args... condition, std::chrono::milliseconds t = 5000min) {
+        one(Args... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000)) {
             entrust(t, std::move(condition...));
             base = new retain(condition...);
         }
         /// @param o Indicates the use of the default constructor.
-        one(const Opt::notUseConditionConstructor &o, Args... condition, std::chrono::milliseconds t = 5000min) {
+        one(const Opt::notUseConditionConstructor &o, Args... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000)) {
             entrust(t, std::move(condition...));
             base = new retain();
         }
         // Passing reference wrappers for use after construction by the user.
         // For move semantics: right-value references should be passed directly as construction parameters; please select another constructor version.
         //  If the same condition already exists , or time out get lock ,throw ex.
-        one(T &d, Args... condition, std::chrono::milliseconds t = 5000min) {
+        one(T &d, Args... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000)) {
             entrust(t, std::move(condition...));
             base = new package(d);
+        }
+        
+        inline bool init(Args... condition,std::chrono::milliseconds t = std::chrono::milliseconds(5000)){
+            try
+            {
+                entrust(t,std::move(condition...));
+                base = new retain(condition...);
+                return true;
+            }
+            catch(...)
+            {
+                return false;
+            }
         }
 
         // If the same condition already exists , or time out get lock ,ret false.
@@ -165,13 +177,13 @@ namespace one {
         // If the returns false, it can be called again until successful. There should be no resource leaks.
         template <typename... Argss>
         inline bool init(Args... condition, Argss &&...constructArgs)noexcept {
-            return init(condition..., 5000min, constructArgs...);
+            return init(condition..., std::chrono::milliseconds(5000), constructArgs...);
         }
         // Passing reference wrappers for use after construction by the user.
         // For move semantics: right-value references should be passed directly as construction parameters; please select another constructor version.
         //  If the same condition already exists , or time out get lock ,throw ex.
         // If the returns false, it can be called again until successful. There should be no resource leaks.
-        inline bool init(T &d, Args... condition, std::chrono::milliseconds t = 5000min) noexcept {
+        inline bool init(T &d, Args... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000)) noexcept {
             try {
                 entrust(t, std::move(condition...));
                 base = new package(d);
@@ -183,7 +195,7 @@ namespace one {
         /// @param o Indicates the use of the default constructor.
         //// If the same condition already exists , or time out get lock ,ret false.
         // If the returns false, it can be called again until successful. There should be no resource leaks.
-        inline bool init(const Opt::notUseConditionConstructor &o, Args... condition, std::chrono::milliseconds t = 5000min ) noexcept {
+        inline bool init(const Opt::notUseConditionConstructor &o, Args... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000) ) noexcept {
             try {
                 entrust(t, std::move(condition...));
                 base = new retain();
@@ -240,7 +252,7 @@ namespace one {
         template <typename... Argss>
         oneR(std::chrono::milliseconds t, Args... condition, Argss &&...args) {
             entrust(t, std::move(condition...));
-            obj = T{std::forward<Argss...>(args...)};
+            obj = T{args...};
         };
         oneR(const Opt::notUseConditionConstructor &o, Args... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000U)) {
             entrust(t, std::move(condition...));
@@ -257,7 +269,7 @@ namespace one {
         bool init(std::chrono::milliseconds t, Args... condition, Argss &&...args) noexcept {
             try {
                 entrust(t, std::move(condition...));
-                obj = T{std::forward<Argss...>(args...)};
+                obj = T{args...};
                 return true;
             } catch (...) {
                 return false;
@@ -265,7 +277,7 @@ namespace one {
         }
         ~oneR() {
             this->mtx.lock();
-            this->erase(data);
+            this->erase(std::move(data));
             this->mtx.unlock();
         }
     };

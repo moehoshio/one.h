@@ -5,6 +5,7 @@ Additionally:
 
 - It follows the RAII principle.
 - It is thread-safe.
+- Cross-platform and dependency-free (only relies on the standard library).
 - Being header-only, it's easy to customize.
 - It adheres to modern C++ practices.
 
@@ -49,7 +50,7 @@ using oneIo = one::one<std::fstream,std::string>;
         // Implicit conversion cannot be triggered here. (Template variable parameter matching takes precedence over implicit conversion)
 
         //throw using exception_ = type;
-        oneIo file6("file.txt");
+        oneIo file6("file.txt"); //is ok
     }
     catch(const std::exception& e)
     {
@@ -111,4 +112,10 @@ If it's a custom type, it should have T&&, operator ==, operator &&==, and new a
 
 Overhead:
 For "condition", there will always be one copy.
-![ ](img/img1.png)
+![img](img/img1.png)
+
+Welcome to  submit questions, light up star , error corrections (even just for better translations), and feature suggestions/construction. :D
+
+Look at these again:  
+
+- [exec.h](https://github.com/moehoshio/exec.h)

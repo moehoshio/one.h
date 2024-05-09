@@ -83,6 +83,7 @@ There's another version that allows direct access to member objects, holding mem
 
 ```cpp
     one::oneR<std::fstream,std::string> file3(std::chrono::milliseconds(5000),/*condition*/"file3.txt","file3.txt");
+    (void)file3.obj.is_open();//true
 ```
 
 If you use different types, they will be different instances and lists (including one).

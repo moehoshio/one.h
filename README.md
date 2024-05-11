@@ -14,6 +14,10 @@ However, it also has some limitations:
 - It cannot track instances where the library is not actively used.
 - It can only guarantee uniqueness for instances with the same "condition" created using this library.
 
+Look at these again:  
+
+- [exec.h](https://github.com/moehoshio/exec.h)
+
 ## Usage example
 
 ```cpp
@@ -23,7 +27,8 @@ However, it also has some limitations:
 #include <iostream>
 #include <filesystem>
 using oneIo = one::one<std::fstream,std::string>;
-
+//The first type of the template is the type of the object, followed by the 'conditions' (which can be more than one).
+//e.g the one::one<std::fstream,std::string,std::ios::openmode, ...>
     try
     {
         // Here, the default object constructor is used.
@@ -50,10 +55,9 @@ using oneIo = one::one<std::fstream,std::string>;
         // Implicit conversion cannot be triggered here. (Template variable parameter matching takes precedence over implicit conversion)
 
         //throw using exception_ = type;
-        oneIo file6("file.txt"); //is ok
-    }
-    catch(const std::exception& e)
-    {
+        oneIo file6("file.txt"); 
+        
+    } catch(const std::exception& e){
         // Handle errors...
     } catch (...){
         //The thrown exception type can be customized.
@@ -61,7 +65,7 @@ using oneIo = one::one<std::fstream,std::string>;
     // The scope ends, releasing all its conditions.
     // If it's a custom type, it should adhere to the RAII principle. Otherwise, it must be released before the end of the scope.
     // std::fstream will automatically release (close) the file upon termination.
-    oneIo file("file.txt");
+    oneIo file("file.txt");//is ok
 
 
 ```
@@ -115,7 +119,3 @@ For "condition", there will always be one copy.
 ![img](img/img1.png)
 
 Welcome to  submit questions, light up star , error corrections (even just for better translations), and feature suggestions/construction. :D
-
-Look at these again:  
-
-- [exec.h](https://github.com/moehoshio/exec.h)

@@ -6,6 +6,7 @@
     // Welcome to  submit questions, light up star , error corrections (even just for better translations), and feature suggestions/construction.
     // :D
 /*
+MIT License
 Copyright (c) 2024 Hoshi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -45,43 +46,43 @@ namespace one {
     }; // namespace Opt
 
     // base, save list
-    template <typename T, typename... Args>
+    template <typename T, typename... Conditions>
     class oneMethod {
     private:
-        static std::vector<std::tuple<Args...>> list;
+        static std::vector<std::tuple<Conditions...>> list;
     protected:
         static std::timed_mutex mtx;
 
     public:
-        template <typename... Argss>
-        static void add(Argss &&...args) noexcept {
-            list.push_back(std::make_tuple(std::forward<Argss...>(args...)));
+        template <typename... Args>
+        static void add(Args&&... args) noexcept {
+            list.push_back(std::make_tuple(std::forward<Args...>(args...)));
         }
 
-        static void add(std::tuple<Args...> &&t) noexcept {
+        static void add(std::tuple<Conditions...> &&t) noexcept {
             list.push_back(t);
         }
-        template <typename... Argss>
-        static bool verified(Argss &&...args) noexcept {
-            return (std::find(list.begin(), list.end(), std::make_tuple(std::forward<Argss...>(args...))) != list.end());
+        template <typename... Args>
+        static bool verified(Args&&... args) noexcept {
+            return (std::find(list.begin(), list.end(), std::make_tuple(std::forward<Args...>(args...))) != list.end());
         }
 
-        static bool verified(std::tuple<Args...> &&t) noexcept {
+        static bool verified(std::tuple<Conditions...> &&t) noexcept {
             return (std::find(list.begin(), list.end(), t) != list.end());
         }
-        template <typename... Argss>
-        static void erase(Argss &&...args) noexcept {
-            list.erase(std::remove(list.begin(), list.end(), std::make_tuple(std::forward<Argss...>(args...))), list.end());
+        template <typename... Args>
+        static void erase(Args&&... args) noexcept {
+            list.erase(std::remove(list.begin(), list.end(), std::make_tuple(std::forward<Args...>(args...))), list.end());
         }
 
-        static void erase(std::tuple<Args...> &&t) noexcept {
+        static void erase(std::tuple<Conditions...> &&t) noexcept {
             list.erase(std::remove(list.begin(), list.end(), t), list.end());
         }
     };
-    template <typename T, typename... Args>
-    std::vector<std::tuple<Args...>> oneMethod<T, Args...>::list;
-    template <typename T, typename... Args>
-    std::timed_mutex oneMethod<T, Args...>::mtx;
+    template <typename T, typename... Conditions>
+    std::vector<std::tuple<Conditions...>> oneMethod<T, Conditions...>::list;
+    template <typename T, typename... Conditions>
+    std::timed_mutex oneMethod<T, Conditions...>::mtx;
 
     /// @brief Construct a T type object using parameters and ensure that there is only one instance of T object with the same parameters
     // need args identical , e.g <std::string,std::string> and <std::string,std::string> ,Only then will this be effective (Otherwise it is a different instance)
@@ -95,13 +96,13 @@ namespace one {
         X& operator=(const X& x) { i = x.i; return *this;}
     };
     */
-    /// @param Args... , If it's a pointer, the comparison will be based on the pointer address (including char*!), To compare whether strings are the same, std::string should be used
+    /// @param Conditions... , If it's a pointer, the comparison will be based on the pointer address (including char*!), To compare whether strings are the same, std::string should be used
     /// @param condition Condition generates one additional copy.
-    template <typename T, typename... Args>
-    class one : private oneMethod<T, Args...> {
+    template <typename T, typename... Conditions>
+    class one : private oneMethod<T, Conditions...> {
         
     private:
-        std::tuple<Args...> data;
+        std::tuple<Conditions...> data;
         struct Base {
             virtual inline T *get() = 0;
             virtual ~Base() {}
@@ -112,8 +113,8 @@ namespace one {
             retain() {
                 ptr = new T();
             };
-            template <typename... Argss>
-            retain(Argss&&... args) {
+            template <typename... Args>
+            retain(Args&&... args) {
                 ptr = new T{args...};
             }
             inline T *get() {
@@ -131,18 +132,18 @@ namespace one {
             };
         };
 
-        template <typename... Argss>
-        inline void entrust(const std::chrono::milliseconds &t, Argss &&...condition) {
+        template <typename... Args>
+        inline void entrust(const std::chrono::milliseconds &t, Args&&... condition) {
 
             // if need Guaranteed not to be modified during traversal ,Just get the lock first(Need Unlock before throwing)
-            if (this->verified(std::forward<Argss...>(condition...)))
+            if (this->verified(std::forward<Args...>(condition...)))
                 throw exception_("There is the same");
 
             if (!this->mtx.try_lock_for(t))
                 throw exception_("Get lock the time out");
 
-            this->add(std::forward<Argss...>(condition...));
-            data = std::make_tuple(std::forward<Argss...>(condition...));
+            this->add(std::forward<Args...>(condition...));
+            data = std::make_tuple(std::forward<Args...>(condition...));
             this->mtx.unlock();
         }
 
@@ -150,34 +151,34 @@ namespace one {
         // The default constructor does nothing; if used, the init function should be called.
         one() noexcept {}
         // Constructing objects using constructArgs.
-        template <typename... Argss>
-        one(Args... condition, std::chrono::milliseconds t, Argss &&...constructArgs) {
+        template <typename... Args>
+        one(Conditions... condition, std::chrono::milliseconds t, Args&&... constructArgs) {
             entrust(t, std::move(condition...));
             base = new retain(constructArgs...);
         }
         // Constructing objects using constructArgs.
-        template <typename... Argss>
-        one(Args... condition, Argss &&...constructArgs) : one(condition..., std::chrono::milliseconds(5000) , constructArgs...){};
+        template <typename... Args>
+        one(Conditions... condition, Args&&... constructArgs) : one(condition..., std::chrono::milliseconds(5000) , constructArgs...){};
 
         // Constructing objects using condition.
-        one(Args... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000)) {
+        one(Conditions... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000)) {
             entrust(t, std::move(condition...));
             base = new retain(condition...);
         }
         /// @param o Indicates the use of the default constructor.
-        one(const Opt::notUseConditionConstructor &o, Args... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000)) {
+        one(const Opt::notUseConditionConstructor &o, Conditions... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000)) {
             entrust(t, std::move(condition...));
             base = new retain();
         }
         // Passing reference wrappers for use after construction by the user.
         // For move semantics: right-value references should be passed directly as construction parameters; please select another constructor version.
         //  If the same condition already exists , or time out get lock ,throw ex.
-        one(T &d, Args... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000)) {
+        one(T &d, Conditions... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000)) {
             entrust(t, std::move(condition...));
             base = new package(d);
         }
         
-        inline bool init(Args... condition,std::chrono::milliseconds t = std::chrono::milliseconds(5000)){
+        inline bool init(Conditions... condition,std::chrono::milliseconds t = std::chrono::milliseconds(5000)){
             try
             {
                 entrust(t,std::move(condition...));
@@ -192,8 +193,8 @@ namespace one {
 
         // If the same condition already exists , or time out get lock ,ret false.
         // If the returns false, it can be called again until successful. There should be no resource leaks.
-        template <typename... Argss>
-        inline bool init(Args... condition, std::chrono::milliseconds t, Argss &&...constructArgs) noexcept {
+        template <typename... Args>
+        inline bool init(Conditions... condition, std::chrono::milliseconds t, Args&&... constructArgs) noexcept {
             try {
                 entrust(t, std::move(condition...));
                 base = new retain(constructArgs...);
@@ -204,15 +205,15 @@ namespace one {
         }
         // If the same condition already exists , or time out get lock ,ret false.
         // If the returns false, it can be called again until successful. There should be no resource leaks.
-        template <typename... Argss>
-        inline bool init(Args... condition, Argss &&...constructArgs)noexcept {
+        template <typename... Args>
+        inline bool init(Conditions... condition, Args &&...constructArgs)noexcept {
             return init(condition..., std::chrono::milliseconds(5000), constructArgs...);
         }
         // Passing reference wrappers for use after construction by the user.
         // For move semantics: right-value references should be passed directly as construction parameters; please select another constructor version.
         //  If the same condition already exists , or time out get lock ,throw ex.
         // If the returns false, it can be called again until successful. There should be no resource leaks.
-        inline bool init(T &d, Args... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000)) noexcept {
+        inline bool init(T &d, Conditions... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000)) noexcept {
             try {
                 entrust(t, std::move(condition...));
                 base = new package(d);
@@ -224,7 +225,7 @@ namespace one {
         /// @param o Indicates the use of the default constructor.
         //// If the same condition already exists , or time out get lock ,ret false.
         // If the returns false, it can be called again until successful. There should be no resource leaks.
-        inline bool init(const Opt::notUseConditionConstructor &o, Args... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000) ) noexcept {
+        inline bool init(const Opt::notUseConditionConstructor &o, Conditions... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000) ) noexcept {
             try {
                 entrust(t, std::move(condition...));
                 base = new retain();
@@ -260,33 +261,33 @@ namespace one {
     // if is Custom type, there should be T&& Construct 、operator == and operator &&== 、new not =delete
     /// @param Args... , If it's a pointer, the comparison will be based on the pointer address (including char*!), To compare whether strings are the same, std::string should be used
     /// @param condition Condition generates one additional copy.
-    template <typename T, typename... Args>
-    struct oneR : private oneMethod<T, Args...> {
+    template <typename T, typename... Conditions>
+    struct oneR : private oneMethod<T, Conditions...> {
         T obj;
-        std::tuple<Args...> data;
-        template <typename... Argss>
-        inline void entrust(std::chrono::milliseconds t, Argss &&...args) {
+        std::tuple<Conditions...> data;
+        template <typename... Args>
+        inline void entrust(std::chrono::milliseconds t, Args&&... args) {
             // if need Guaranteed not to be modified during traversal ,Just get the lock first(Need Unlock before throwing)
-            if (this->verified(std::forward<Argss...>(args...)))
+            if (this->verified(std::forward<Args...>(args...)))
                 throw exception_("There is the same");
 
             if (!this->mtx.try_lock_for(t))
                 throw exception_("Get lock the time out");
 
-            this->add(std::forward<Argss...>(args...));
-            data = std::make_tuple(std::forward<Argss...>(args...));
+            this->add(std::forward<Args...>(args...));
+            data = std::make_tuple(std::forward<Args...>(args...));
             this->mtx.unlock();
         }
         oneR() noexcept {};
-        template <typename... Argss>
-        oneR(std::chrono::milliseconds t, Args... condition, Argss &&...args) {
+        template <typename... Args>
+        oneR(std::chrono::milliseconds t, Conditions... condition, Argss&&... args) {
             entrust(t, std::move(condition...));
             obj = T{args...};
         };
-        oneR(const Opt::notUseConditionConstructor &o, Args... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000U)) {
+        oneR(const Opt::notUseConditionConstructor &o, Conditions... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000U)) {
             entrust(t, std::move(condition...));
         }
-        bool init(const Opt::notUseConditionConstructor &o, Args... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000U)) {
+        inline bool init(const Opt::notUseConditionConstructor &o, Conditions... condition, std::chrono::milliseconds t = std::chrono::milliseconds(5000U)) {
             try {
                 entrust(t, std::move(condition...));
                 return true;
@@ -294,8 +295,8 @@ namespace one {
                 return false;
             }
         }
-        template <typename... Argss>
-        bool init(std::chrono::milliseconds t, Args... condition, Argss &&...args) noexcept {
+        template <typename... Args>
+        inline bool init(std::chrono::milliseconds t, Conditions... condition, Argss&&... args) noexcept {
             try {
                 entrust(t, std::move(condition...));
                 obj = T{args...};

@@ -18,7 +18,34 @@ Look at these again:
 
 - [exec.h](https://github.com/moehoshio/exec.h)
 
-## Usage example
+In general, you'd want a file to be opened only once, especially in a multi-threaded scenario.  
+  
+This can be achieved:  
+
+```cpp
+using oneIo = one::one<std::fstream,std::string>;
+
+void func(){
+    try{
+        oneIo file("file.txt");
+        (*file.get())<<"hello file stream";
+        std::this_thread::sleep_for(3000);
+    }
+}
+void func2(){
+    std::fstream file("file.txt");
+    file<<"hello file stream";//potentially leading to unexpected outcomes.
+}
+
+    std::thread t1(func);// is ok
+    std::thread t2(func);// throw ex
+
+    //Direct usage would result in resource contention, potentially leading to unexpected outcomes.
+    std::thread t3(func2);
+    std::thread t4(func2);
+```
+
+## More usage example
 
 ```cpp
 #include "one.h"

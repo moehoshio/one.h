@@ -1,6 +1,6 @@
     // one.h
     // cpp Lang
-    // Version 0.01
+    // Version 0.0.2
     // https://github.com/moehoshio/one.h
     // MIT License
     // Welcome to  submit questions, light up star , error corrections (even just for better translations), and feature suggestions/construction.
@@ -305,6 +305,12 @@ namespace one {
                 return false;
             }
         }
+        // After moving, the original member object should no longer be used.
+        // And attention needs to be paid to the issue of object lifetimes (including the lifetimes of objects and lists).
+        inline decltype(auto) move(){
+            return std::move(obj);
+        };
+
         ~oneR() {
             this->mtx.lock();
             this->erase(std::move(data));

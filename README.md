@@ -127,10 +127,12 @@ For example:
 one::oneR<std::fstream,std::filesystem::path> file4(one::Opt::notUseConditionConstructor{},std::filesystem::path("file3.txt"));
 ```
 
-For Args...
+For type and conditions...
 
-pointer types (including char *) should not be used.  
-If it's a custom type, it should have T&&, operator ==, operator &&==, and new and delete should not be deleted. A satisfactory example is:
+objects : new and delete should not be deleted.
+
+condition : pointer types (including char *) should not be used.  
+If it's a custom type, it should have T&&, operator ==, operator &&==  A satisfactory example is:
 
 ```cpp
     struct X{

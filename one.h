@@ -266,21 +266,21 @@ namespace one {
         T obj;
         std::tuple<Conditions...> data;
         template <typename... Args>
-        inline void entrust(std::chrono::milliseconds t, Args&&... args) {
+        inline void entrust(std::chrono::milliseconds t, Args&&... condition) {
             // if need Guaranteed not to be modified during traversal ,Just get the lock first(Need Unlock before throwing)
-            if (this->verified(std::forward<Args...>(args...)))
+            if (this->verified(std::forward<Args...>(condition...)))
                 throw exception_("There is the same");
 
             if (!this->mtx.try_lock_for(t))
                 throw exception_("Get lock the time out");
 
-            this->add(std::forward<Args...>(args...));
-            data = std::make_tuple(std::forward<Args...>(args...));
+            this->add(std::forward<Args...>(condition...));
+            data = std::make_tuple(std::forward<Args...>(condition...));
             this->mtx.unlock();
         }
         oneR() noexcept {};
         template <typename... Args>
-        oneR(std::chrono::milliseconds t, Conditions... condition, Argss&&... args) {
+        oneR(std::chrono::milliseconds t, Conditions... condition, Args&&... args) {
             entrust(t, std::move(condition...));
             obj = T{args...};
         };
@@ -296,7 +296,7 @@ namespace one {
             }
         }
         template <typename... Args>
-        inline bool init(std::chrono::milliseconds t, Conditions... condition, Argss&&... args) noexcept {
+        inline bool init(std::chrono::milliseconds t, Conditions... condition, Args&&... args) noexcept {
             try {
                 entrust(t, std::move(condition...));
                 obj = T{args...};

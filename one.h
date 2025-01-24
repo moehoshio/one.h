@@ -1,5 +1,5 @@
-    // one.h
-    // cpp Lang
+    // one.hpp
+    // Lang c++20
     // Version 0.0.2
     // https://github.com/moehoshio/one.h
     // MIT License
@@ -36,10 +36,13 @@ SOFTWARE.
 #include <tuple>
 #include <vector>
 
+    // your exception type
+    using theSameException = std::runtime_error;
+    using timeOutException = std::runtime_error;
+
+
 namespace one {
 
-    using exception_ = std::runtime_error; // your exception type
-    
     inline namespace Opt {
         // Indicates the use of the default constructor.
         struct notUseConditionConstructor{};
@@ -137,10 +140,10 @@ namespace one {
 
             // if need Guaranteed not to be modified during traversal ,Just get the lock first(Need Unlock before throwing)
             if (this->verified(std::forward<Args...>(condition...)))
-                throw exception_("There is the same");
+                throw theSameException("There is the same");
 
             if (!this->mtx.try_lock_for(t))
-                throw exception_("Get lock the time out");
+                throw timeOutException("Get lock the time out");
 
             this->add(std::forward<Args...>(condition...));
             data = std::make_tuple(std::forward<Args...>(condition...));
@@ -266,16 +269,16 @@ namespace one {
         T obj;
         std::tuple<Conditions...> data;
         template <typename... Args>
-        inline void entrust(std::chrono::milliseconds t, Args&&... condition) {
+        inline void entrust(std::chrono::milliseconds t, Args&&... args) {
             // if need Guaranteed not to be modified during traversal ,Just get the lock first(Need Unlock before throwing)
-            if (this->verified(std::forward<Args...>(condition...)))
-                throw exception_("There is the same");
+            if (this->verified(std::forward<Args...>(args...)))
+                throw theSameException("There is the same");
 
             if (!this->mtx.try_lock_for(t))
-                throw exception_("Get lock the time out");
+                throw timeOutException("Get lock the time out");
 
-            this->add(std::forward<Args...>(condition...));
-            data = std::make_tuple(std::forward<Args...>(condition...));
+            this->add(std::forward<Args...>(args...));
+            data = std::make_tuple(std::forward<Args...>(args...));
             this->mtx.unlock();
         }
         oneR() noexcept {};

@@ -144,7 +144,5 @@ If it's a custom type, it should have T&&, operator ==, operator &&==  A satisfa
 ```
 
 Overhead:
-For "condition", there will always be one copy.
-![img](img/img1.png)
 
 Welcome to  submit questions, light up star , error corrections (even just for better translations), and feature suggestions/construction. :D

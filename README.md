@@ -1,4 +1,4 @@
-# one.h
+# one.hpp
 
 This is a header-only C++ library that provides simple mutex locking and encapsulation, ensuring that only one instance of the same object with the same "condition" exists.  
 Additionally:
@@ -48,7 +48,7 @@ void func2(){
 ## More usage example
 
 ```cpp
-#include "one.h"
+#include "one.hpp"
 #include <fstream>
 #include <string>
 #include <iostream>
